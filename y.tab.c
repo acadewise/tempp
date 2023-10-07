@@ -100,20 +100,16 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 14 "shell.y"
+#line 15 "shell.y"
 
-#include <sys/types.h>
-#include <stdio.h>
+#include <string>
 #include <string.h>
-#include <regex.h>
-#include <dirent.h>
-#include <malloc.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
 
-#line 117 "y.tab.c"
+#if __cplusplus > 199711L
+#define register      // Deprecated in C++11 so remove the keyword
+#endif
+
+#line 113 "y.tab.c"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -128,13 +124,13 @@ extern int yydebug;
     NOTOKEN = 259,                 /* NOTOKEN  */
     GREAT = 260,                   /* GREAT  */
     NEWLINE = 261,                 /* NEWLINE  */
-    LESS = 262,                    /* LESS  */
-    PIPE = 263,                    /* PIPE  */
+    PIPE = 262,                    /* PIPE  */
+    GREATGREAT = 263,              /* GREATGREAT  */
     AMPERSAND = 264,               /* AMPERSAND  */
-    GREATGREAT = 265,              /* GREATGREAT  */
-    GREATAND = 266,                /* GREATAND  */
-    TWOGREAT = 267,                /* TWOGREAT  */
-    GREATGREATAND = 268            /* GREATGREATAND  */
+    LESS = 265,                    /* LESS  */
+    GREATAMPERSAND = 266,          /* GREATAMPERSAND  */
+    GREATGREATAMPERSAND = 267,     /* GREATGREATAMPERSAND  */
+    TWOGREAT = 268                 /* TWOGREAT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -147,23 +143,25 @@ extern int yydebug;
 #define NOTOKEN 259
 #define GREAT 260
 #define NEWLINE 261
-#define LESS 262
-#define PIPE 263
+#define PIPE 262
+#define GREATGREAT 263
 #define AMPERSAND 264
-#define GREATGREAT 265
-#define GREATAND 266
-#define TWOGREAT 267
-#define GREATGREATAND 268
+#define LESS 265
+#define GREATAMPERSAND 266
+#define GREATGREATAMPERSAND 267
+#define TWOGREAT 268
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 28 "shell.y"
+#line 25 "shell.y"
 
-  char *string_val;
+  char        *string_val;
+  // Example of using a c++ type in yacc
+  std::string *cpp_string;
 
-#line 167 "y.tab.c"
+#line 165 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -190,13 +188,13 @@ enum yysymbol_kind_t
   YYSYMBOL_NOTOKEN = 4,                    /* NOTOKEN  */
   YYSYMBOL_GREAT = 5,                      /* GREAT  */
   YYSYMBOL_NEWLINE = 6,                    /* NEWLINE  */
-  YYSYMBOL_LESS = 7,                       /* LESS  */
-  YYSYMBOL_PIPE = 8,                       /* PIPE  */
+  YYSYMBOL_PIPE = 7,                       /* PIPE  */
+  YYSYMBOL_GREATGREAT = 8,                 /* GREATGREAT  */
   YYSYMBOL_AMPERSAND = 9,                  /* AMPERSAND  */
-  YYSYMBOL_GREATGREAT = 10,                /* GREATGREAT  */
-  YYSYMBOL_GREATAND = 11,                  /* GREATAND  */
-  YYSYMBOL_TWOGREAT = 12,                  /* TWOGREAT  */
-  YYSYMBOL_GREATGREATAND = 13,             /* GREATGREATAND  */
+  YYSYMBOL_LESS = 10,                      /* LESS  */
+  YYSYMBOL_GREATAMPERSAND = 11,            /* GREATAMPERSAND  */
+  YYSYMBOL_GREATGREATAMPERSAND = 12,       /* GREATGREATAMPERSAND  */
+  YYSYMBOL_TWOGREAT = 13,                  /* TWOGREAT  */
   YYSYMBOL_YYACCEPT = 14,                  /* $accept  */
   YYSYMBOL_goal = 15,                      /* goal  */
   YYSYMBOL_commands = 16,                  /* commands  */
@@ -209,29 +207,28 @@ enum yysymbol_kind_t
   YYSYMBOL_pipe_list = 23,                 /* pipe_list  */
   YYSYMBOL_iomodifier_opt = 24,            /* iomodifier_opt  */
   YYSYMBOL_iomodifier_list = 25,           /* iomodifier_list  */
-  YYSYMBOL_background_opt = 26             /* background_opt  */
+  YYSYMBOL_background_optional = 26        /* background_optional  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 /* Second part of user prologue.  */
-#line 35 "shell.y"
+#line 34 "shell.y"
 
-#include <stdio.h>
-#include "shell.h"
+//#define yylex yylex
+#include <cstdio>
+#include "command.h"
 
 void yyerror(const char * s);
-void expandWildcardsIfNecessary(char *arg);
-void expandWildcard(char *prefix, char *suffix);
-bool cmpfunction (char *i, char *j);
-
 int yylex();
-static char **_sortArgument = NULL;
-static int _sortArgumentSize = 0;
-static int _sortArgumentCount = 0;
-static bool wildCard;
 
-#line 235 "y.tab.c"
+void expandWildCardsIfNecessary(char * arg);
+void expandWildCards(char * prefix, char * arg);
+int cmpfunc(const void * file1, const void * file2);
+bool is_dir(const char * path);
+
+
+#line 232 "y.tab.c"
 
 
 #ifdef short
@@ -555,16 +552,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  12
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   29
+#define YYLAST   35
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  14
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  13
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  25
+#define YYNRULES  26
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  36
+#define YYNSTATES  37
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   268
@@ -614,9 +611,9 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    54,    54,    58,    59,    63,    66,    69,    73,    77,
-      83,    84,    88,   105,   112,   113,   117,   120,   124,   128,
-     133,   136,   142,   143,   147,   150
+       0,    52,    52,    56,    57,    60,    64,    68,    69,    73,
+      80,    81,    85,    95,   103,   104,   108,   113,   119,   125,
+     132,   137,   144,   145,   146,   150,   153
 };
 #endif
 
@@ -633,11 +630,11 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "WORD", "NOTOKEN",
-  "GREAT", "NEWLINE", "LESS", "PIPE", "AMPERSAND", "GREATGREAT",
-  "GREATAND", "TWOGREAT", "GREATGREATAND", "$accept", "goal", "commands",
-  "command", "simple_command", "command_and_args", "argument_list",
-  "argument", "command_word", "pipe_list", "iomodifier_opt",
-  "iomodifier_list", "background_opt", YY_NULLPTR
+  "GREAT", "NEWLINE", "PIPE", "GREATGREAT", "AMPERSAND", "LESS",
+  "GREATAMPERSAND", "GREATGREATAMPERSAND", "TWOGREAT", "$accept", "goal",
+  "commands", "command", "simple_command", "command_and_args",
+  "argument_list", "argument", "command_word", "pipe_list",
+  "iomodifier_opt", "iomodifier_list", "background_optional", YY_NULLPTR
 };
 
 static const char *
@@ -661,10 +658,10 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      10,    -3,    -6,    -6,     1,     9,    -6,    -6,    -6,    -6,
-       6,    -6,    -6,    -6,    14,    15,    -5,    -6,    -6,    -6,
-      16,    17,    -6,    18,    19,    20,    21,    -6,    22,    -6,
-      -6,    -6,    -6,    -6,    -6,    -6
+      19,    -2,    -6,    -6,     1,    18,    -6,    -6,    -6,    -6,
+      -5,    -6,    -6,    -6,     7,     8,    20,    23,    24,    25,
+      26,    27,    -6,     4,    -6,    -6,    -6,    -6,    -6,    -6,
+      -6,    -6,    -6,    -6,    -6,    28,    -6
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -672,24 +669,24 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,    13,     6,     0,     0,     3,    15,     8,    11,
-      23,     7,     1,     4,     9,     0,    25,    12,    10,    14,
-       0,     0,    24,     0,     0,     0,     0,    22,     0,    16,
-      20,    17,    18,    21,    19,     5
+       0,     0,    13,     7,     0,     0,     3,     5,    15,    11,
+      24,     8,     1,     4,     9,     0,     0,     0,     0,     0,
+       0,     0,    23,    26,    12,    10,    16,    14,    17,    20,
+      18,    19,    21,    25,    22,     0,     6
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -6,    -6,    -6,    24,    11,    -6,    -6,    -6,    -6,    -6,
-      -6,    -6,    -6
+      -6,    -6,    -6,    30,    -6,    15,    -6,    -6,    -6,    -6,
+       9,    -6,    -6
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     4,     5,     6,     7,     8,    14,    18,     9,    10,
-      27,    16,    28
+       0,     4,     5,     6,     7,     8,    14,    25,     9,    10,
+      22,    23,    35
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -697,16 +694,18 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      20,    12,    21,    11,    22,    23,    24,    25,    26,    -2,
-       1,     1,     2,     2,    15,     3,     3,    17,     2,    29,
-      30,    31,    32,    33,    34,     0,    19,     0,    35,    13
+      15,    12,    16,    17,    11,    18,    19,    20,    21,    15,
+      24,    26,    17,    33,    18,    19,    20,    21,    -2,     1,
+       1,     2,     2,     2,     3,     3,    28,    29,    30,    31,
+      32,    27,    34,     0,    36,    13
 };
 
 static const yytype_int8 yycheck[] =
 {
-       5,     0,     7,     6,     9,    10,    11,    12,    13,     0,
-       1,     1,     3,     3,     8,     6,     6,     3,     3,     3,
-       3,     3,     3,     3,     3,    -1,    15,    -1,     6,     5
+       5,     0,     7,     8,     6,    10,    11,    12,    13,     5,
+       3,     3,     8,     9,    10,    11,    12,    13,     0,     1,
+       1,     3,     3,     3,     6,     6,     3,     3,     3,     3,
+       3,    16,    23,    -1,     6,     5
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -714,25 +713,25 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,     1,     3,     6,    15,    16,    17,    18,    19,    22,
-      23,     6,     0,    17,    20,     8,    25,     3,    21,    18,
-       5,     7,     9,    10,    11,    12,    13,    24,    26,     3,
-       3,     3,     3,     3,     3,     6
+      23,     6,     0,    17,    20,     5,     7,     8,    10,    11,
+      12,    13,    24,    25,     3,    21,     3,    19,     3,     3,
+       3,     3,     3,     9,    24,    26,     6
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    14,    15,    16,    16,    17,    17,    17,    18,    19,
+       0,    14,    15,    16,    16,    17,    18,    18,    18,    19,
       20,    20,    21,    22,    23,    23,    24,    24,    24,    24,
-      24,    24,    25,    25,    26,    26
+      24,    24,    25,    25,    25,    26,    26
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     1,     2,     4,     1,     2,     1,     2,
+       0,     2,     1,     1,     2,     1,     4,     1,     2,     2,
        2,     0,     1,     1,     3,     1,     2,     2,     2,     2,
-       2,     2,     2,     0,     1,     0
+       2,     2,     2,     1,     0,     1,     0
 };
 
 
@@ -1195,126 +1194,131 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 5: /* command: pipe_list iomodifier_list background_opt NEWLINE  */
-#line 63 "shell.y"
-                                                   {
-    Shell::_currentCommand.execute();
+  case 6: /* simple_command: pipe_list iomodifier_list background_optional NEWLINE  */
+#line 64 "shell.y"
+                                                         { 
+//printf("   Yacc: Execute command\n");
+    Command::_currentCommand.execute();
   }
 #line 1204 "y.tab.c"
     break;
 
-  case 6: /* command: NEWLINE  */
-#line 66 "shell.y"
-            {
-    Shell::_currentCommand.execute();
-  }
-#line 1212 "y.tab.c"
+  case 7: /* simple_command: NEWLINE  */
+#line 68 "shell.y"
+            { Command::_currentCommand.prompt();}
+#line 1210 "y.tab.c"
     break;
 
-  case 7: /* command: error NEWLINE  */
+  case 8: /* simple_command: error NEWLINE  */
 #line 69 "shell.y"
                   { yyerrok; }
-#line 1218 "y.tab.c"
+#line 1216 "y.tab.c"
     break;
 
   case 9: /* command_and_args: command_word argument_list  */
-#line 77 "shell.y"
-                             {    
-    Shell::_currentCommand.insertSimpleCommand(Command::_currentSimpleCommand);
+#line 73 "shell.y"
+                             {
+    Command::_currentCommand.
+    insertSimpleCommand( Command::_currentSimpleCommand );
   }
-#line 1226 "y.tab.c"
+#line 1225 "y.tab.c"
     break;
 
   case 12: /* argument: WORD  */
-#line 88 "shell.y"
+#line 85 "shell.y"
        {
-    wildCard = false;
-    char *p = (char *)"";
-    expandWildcard(p, (yyvsp[0].string_val));
-    qsort(_sortArgument, _sortArgumentCount, sizeof(char *), cmpfunction);
-    for (int i = 0; i < _sortArgumentCount; i++) {
-      Command::_currentSimpleCommand->insertArgument(_sortArgument[i]);
-      free(_sortArgument[i]); // Free allocated memory
-    }
-    free(_sortArgument); // Free the array itself
-    _sortArgument = NULL;
-    _sortArgumentSize = 0;
-    _sortArgumentCount = 0;
+//printf("   Yacc: insert argument \"%s\"\n", $1);
+	  if(strcmp(Command::_currentSimpleCommand->_arguments[0], "echo") == 0 && strchr((yyvsp[0].string_val), '?'))
+      	Command::_currentSimpleCommand->insertArgument( (yyvsp[0].string_val) );
+	  else
+		expandWildCardsIfNecessary((yyvsp[0].string_val));
   }
-#line 1245 "y.tab.c"
+#line 1237 "y.tab.c"
     break;
 
   case 13: /* command_word: WORD  */
-#line 105 "shell.y"
+#line 95 "shell.y"
        {
+//printf("   Yacc: insert command \"%s\"\n", $1);
     Command::_currentSimpleCommand = new SimpleCommand();
-    Command::_currentSimpleCommand->insertArgument((yyvsp[0].string_val));
+    Command::_currentSimpleCommand->insertArgument( (yyvsp[0].string_val) );
   }
-#line 1254 "y.tab.c"
+#line 1247 "y.tab.c"
     break;
 
   case 16: /* iomodifier_opt: GREAT WORD  */
-#line 117 "shell.y"
-             {
-    Shell::_currentCommand.redirect(1, (yyvsp[0].string_val));
-  }
-#line 1262 "y.tab.c"
+#line 108 "shell.y"
+                   {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
+		Command::_currentCommand._outCounter++;
+  	}
+#line 1257 "y.tab.c"
     break;
 
   case 17: /* iomodifier_opt: GREATGREAT WORD  */
-#line 120 "shell.y"
-                    {
-    Shell::_currentCommand.redirect(1, (yyvsp[0].string_val));
-    Shell::_currentCommand._append = true;
-  }
-#line 1271 "y.tab.c"
+#line 113 "shell.y"
+                          {
+//printf("   GREATGREAT WORD: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
+    	Command::_currentCommand._append = 1;
+		Command::_currentCommand._outCounter++;
+	}
+#line 1268 "y.tab.c"
     break;
 
-  case 18: /* iomodifier_opt: GREATAND WORD  */
-#line 124 "shell.y"
-                  {
-    Shell::_currentCommand.redirect(1, (yyvsp[0].string_val));
-    Shell::_currentCommand.redirect(2, (yyvsp[0].string_val));
-  }
-#line 1280 "y.tab.c"
+  case 18: /* iomodifier_opt: GREATAMPERSAND WORD  */
+#line 119 "shell.y"
+                              {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
+    	Command::_currentCommand._errFile = strdup((yyvsp[0].string_val));
+		Command::_currentCommand._outCounter++;
+	}
+#line 1279 "y.tab.c"
     break;
 
-  case 19: /* iomodifier_opt: GREATGREATAND WORD  */
-#line 128 "shell.y"
-                       {
-    Shell::_currentCommand.redirect(1, (yyvsp[0].string_val));
-    Shell::_currentCommand.redirect(2, (yyvsp[0].string_val));
-    Shell::_currentCommand._append = true;
-  }
-#line 1290 "y.tab.c"
+  case 19: /* iomodifier_opt: GREATGREATAMPERSAND WORD  */
+#line 125 "shell.y"
+                                   {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
+    	Command::_currentCommand._errFile = strdup((yyvsp[0].string_val));
+    	Command::_currentCommand._append = 1;
+		Command::_currentCommand._outCounter++;
+	}
+#line 1291 "y.tab.c"
     break;
 
   case 20: /* iomodifier_opt: LESS WORD  */
-#line 133 "shell.y"
-              {
-    Shell::_currentCommand.redirect(0, (yyvsp[0].string_val));
-  }
-#line 1298 "y.tab.c"
+#line 132 "shell.y"
+                    {
+//printf("   Yacc: insert input \"%s\"\n", $2);
+    	Command::_currentCommand._inFile = strdup((yyvsp[0].string_val));
+		Command::_currentCommand._inCounter++;
+	}
+#line 1301 "y.tab.c"
     break;
 
   case 21: /* iomodifier_opt: TWOGREAT WORD  */
-#line 136 "shell.y"
+#line 137 "shell.y"
+                        {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._errFile = strdup((yyvsp[0].string_val));
+	}
+#line 1310 "y.tab.c"
+    break;
+
+  case 25: /* background_optional: AMPERSAND  */
+#line 150 "shell.y"
                   {
-    Shell::_currentCommand.redirect(2, (yyvsp[0].string_val));
-  }
-#line 1306 "y.tab.c"
-    break;
-
-  case 24: /* background_opt: AMPERSAND  */
-#line 147 "shell.y"
-            {
-    Shell::_currentCommand._background = true;
-  }
-#line 1314 "y.tab.c"
-    break;
-
-
+		Command::_currentCommand._background = 1;
+	}
 #line 1318 "y.tab.c"
+    break;
+
+
+#line 1322 "y.tab.c"
 
       default: break;
     }
@@ -1507,269 +1511,123 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 152 "shell.y"
+#line 156 "shell.y"
 
 
-bool cmpfunction (const void *i, const void *j) {
-  return strcmp(*(const char **)i, *(const char **)j) < 0;
+int maxEntries = 20;
+int nEntries = 0;
+char ** entries;
+
+void expandWildCardsIfNecessary(char * arg) {
+
+	maxEntries = 20;
+	nEntries = 0;
+	entries = (char **) malloc (maxEntries * sizeof(char *));
+
+	if (strchr(arg, '*') || strchr(arg, '?')) {
+		expandWildCards(NULL, arg);
+		qsort(entries, nEntries, sizeof(char *), cmpfunc);
+		for (int i = 0; i < nEntries; i++) Command::_currentSimpleCommand->insertArgument(entries[i]);
+	}
+	else {
+		Command::_currentSimpleCommand->insertArgument(arg);
+	}
+	return;
+}
+
+
+int cmpfunc (const void *file1, const void *file2) {
+	const char *_file1 = *(const char **)file1;
+	const char *_file2 = *(const char **)file2;
+	return strcmp(_file1, _file2);
+}
+
+void expandWildCards(char * prefix, char * arg) {
+
+	char * temp = arg;
+	char * save = (char *) malloc (strlen(arg) + 10);
+	char * dir = save;
+
+	if (temp[0] == '/') *(save++) = *(temp++);
+
+	while (*temp != '/' && *temp) *(save++) = *(temp++);
+	*save = '\0';
+
+	if (strchr(dir, '*') || strchr(dir, '?')) {
+		if (!prefix && arg[0] == '/') {
+			prefix = strdup("/");
+			dir++;
+		}  
+
+		char * reg = (char *) malloc (2*strlen(arg) + 10);
+		char * a = dir;
+		char * r = reg;
+
+		*(r++) = '^';
+		while (*a) {
+			if (*a == '*') { *(r++) = '.'; *(r++) = '*'; }
+			else if (*a == '?') { *(r++) = '.'; }
+			else if (*a == '.') { *(r++) = '\\'; *(r++) = '.'; }
+			else { *(r++) = *a; }
+			a++;
+		}
+		*(r++) = '$'; *r = '\0';
+
+		regex_t re;
+
+		int expbuf = regcomp(&re, reg, REG_EXTENDED|REG_NOSUB);
+
+		char * toOpen = strdup((prefix)?prefix:".");
+		DIR * dir = opendir(toOpen);
+		if (dir == NULL) {
+			perror("opendir");
+			return;
+		}
+
+		struct dirent * ent;
+		regmatch_t match;
+
+		while ((ent = readdir(dir)) != NULL) {
+			if (!regexec(&re, ent->d_name, 1, &match, 0)) {
+				if (*temp) {
+					if (ent->d_type == DT_DIR) {
+						char * nPrefix = (char *) malloc (150);
+						if (!strcmp(toOpen, ".")) nPrefix = strdup(ent->d_name);
+						else if (!strcmp(toOpen, "/")) sprintf(nPrefix, "%s%s", toOpen, ent->d_name);
+						else sprintf(nPrefix, "%s/%s", toOpen, ent->d_name);
+						expandWildCards(nPrefix, (*temp == '/')?++temp:temp);
+					}
+				} else {
+					
+					if (nEntries == maxEntries) { maxEntries *= 2; entries = (char **) realloc (entries, maxEntries * sizeof(char *)); }
+					char * argument = (char *) malloc (100);
+					argument[0] = '\0';
+					if (prefix) sprintf(argument, "%s/%s", prefix, ent->d_name);
+
+					if (ent->d_name[0] == '.') {
+						if (arg[0] == '.') {
+							entries[nEntries++] = (argument[0] != '\0')?strdup(argument):strdup(ent->d_name);
+						}
+					} else {
+						entries[nEntries++] = (argument[0] != '\0')?strdup(argument):strdup(ent->d_name);
+					}
+				}
+			}
+		}
+		closedir(dir);
+	} else {
+		char * preToSend = (char *) malloc (100);
+		if (prefix) sprintf(preToSend, "%s/%s", prefix, dir);
+		else preToSend = strdup(dir);
+
+		if (*temp) expandWildCards(preToSend, ++temp);
+	}
 }
 
 void
 yyerror(const char * s)
 {
   fprintf(stderr,"%s", s);
-}
-
-void expandWildcardsIfNecessary(char *arg) {
-  char *a = arg;
-  char *p;
-  char *path;
-  
-  if (strchr(arg, '?') == NULL && strchr(arg, '*') == NULL) {
-    Command::_currentSimpleCommand->insertArgument(arg);
-    return;
-  }
-
-  DIR *dir;
-  
-  if (arg[0] == '/') {
-    size_t found = 0;
-    found = strcspn(arg, "/");
-    
-    while (strchr(arg + found + 1, '/') != NULL) {
-      found = strcspn(arg + found + 1, "/") + found + 1;
-    }
-    
-    path = strndup(arg, found + 1);
-    a = arg + found + 1;
-    dir = opendir(path);
-  } else {
-    dir = opendir(".");
-    path = (char *)"";
-  }
-  
-  if (dir == NULL) {
-    perror("opendir");
-    return;
-  }
-
-  size_t regSize = 2 * strlen(a) + 10;
-  char *reg = (char *)malloc(regSize);
-  char *r = reg;
-  *r = '^';
-  r++;
-
-  while (*a) {
-    if (*a == '*') {
-      *r = '.';
-      r++;
-      *r = '*';
-      r++;
-    } else if (*a == '?') {
-      *r = '.';
-      r++;
-    } else if (*a == '.') {
-      *r = '\\';
-      r++;
-      *r = '.';
-      r++;
-    } else {
-      *r = *a;
-      r++;
-    }
-    a++;
-  }
-
-  *r = '$';
-  r++;
-  *r = 0;
-
-  regex_t re;
-  int expbuf = regcomp(&re, reg, REG_EXTENDED | REG_NOSUB);
-
-  if (expbuf != 0) {
-    perror("regcomp");
-    return;
-  }
-
-  struct dirent *ent;
-
-  while ((ent = readdir(dir)) != NULL) {
-    if (regexec(&re, ent->d_name, 1, NULL, 0) == 0) {
-      if (reg[1] == '.') {
-        if (ent->d_name[0] != '.') {
-          char *name = (char *)malloc(strlen(path) + strlen(ent->d_name) + 1);
-          strcpy(name, path);
-          strcat(name, ent->d_name);
-          _sortArgumentCount++;
-          _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-          _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-          _sortArgument[_sortArgumentCount - 1] = name;
-        }
-      } else {
-        char *name = (char *)malloc(strlen(path) + strlen(ent->d_name) + 1);
-        strcpy(name, path);
-        strcat(name, ent->d_name);
-        _sortArgumentCount++;
-        _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-        _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-        _sortArgument[_sortArgumentCount - 1] = name;
-      }
-    }
-  }
-
-  closedir(dir);
-  regfree(&re);
-
-  qsort(_sortArgument, _sortArgumentCount, sizeof(char *), cmpfunction);
-  
-  for (int i = 0; i < _sortArgumentCount; i++) {
-    Command::_currentSimpleCommand->insertArgument(_sortArgument[i]);
-    free(_sortArgument[i]); // Free allocated memory
-  }
-  
-  free(_sortArgument); // Free the array itself
-  _sortArgument = NULL;
-  _sortArgumentSize = 0;
-  _sortArgumentCount = 0;
-}
-
-void expandWildcard(char *prefix, char *suffix) {
-  if (suffix[0] == 0) {
-    _sortArgumentCount++;
-    _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-    _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-    _sortArgument[_sortArgumentCount - 1] = strdup(prefix);
-    return;
-  }
-
-  char Prefix[MAXFILENAME];
-
-  if (prefix[0] == 0) {
-    if (suffix[0] == '/') {
-      suffix += 1;
-      sprintf(Prefix, "%s/", prefix);
-    } else {
-      strcpy(Prefix, prefix);
-    }
-  } else {
-    sprintf(Prefix, "%s/", prefix);
-  }
-
-  char *s = strchr(suffix, '/');
-  char component[MAXFILENAME];
-
-  if (s != NULL) {
-    strncpy(component, suffix, s - suffix);
-    component[s - suffix] = 0;
-    suffix = s + 1;
-  } else {
-    strcpy(component, suffix);
-    suffix = suffix + strlen(suffix);
-  }
-
-  char newPrefix[MAXFILENAME];
-
-  if (strchr(component, '?') == NULL && strchr(component, '*') == NULL) {
-    if (Prefix[0] == 0) {
-      strcpy(newPrefix, component);
-    } else {
-      sprintf(newPrefix, "%s%s", prefix, component);
-    }
-    
-    expandWildcard(newPrefix, suffix);
-    return;
-  }
-
-  size_t regSize = 2 * strlen(component) + 10;
-  char *reg = (char *)malloc(regSize);
-  char *r = reg;
-  *r = '^';
-  r++;
-
-  int i = 0;
-
-  while (component[i]) {
-    if (component[i] == '*') {
-      *r = '.';
-      r++;
-      *r = '*';
-      r++;
-    } else if (component[i] == '?') {
-      *r = '.';
-      r++;
-    } else if (component[i] == '.') {
-      *r = '\\';
-      r++;
-      *r = '.';
-      r++;
-    } else {
-      *r = component[i];
-      r++;
-    }
-    i++;
-  }
-
-  *r = '$';
-  r++;
-  *r = 0;
-
-  regex_t re;
-  int expbuf = regcomp(&re, reg, REG_EXTENDED | REG_NOSUB);
-
-  char *dir;
-
-  if (Prefix[0] == 0) {
-    dir = (char *)".";
-  } else {
-    dir = Prefix;
-  }
-  
-  DIR *d = opendir(dir);
-
-  if (d == NULL) {
-    return;
-  }
-
-  struct dirent *ent;
-  bool find = false;
-
-  while ((ent = readdir(d)) != NULL) {
-    if (regexec(&re, ent->d_name, 1, NULL, 0) == 0) {
-      find = true;
-      char *name = (char *)malloc(strlen(Prefix) + strlen(ent->d_name) + 1);
-      strcpy(name, Prefix);
-      strcat(name, ent->d_name);
-      
-      if (reg[1] == '.') {
-        if (ent->d_name[0] != '.') {
-          _sortArgumentCount++;
-          _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-          _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-          _sortArgument[_sortArgumentCount - 1] = name;
-        }
-      } else {
-        _sortArgumentCount++;
-        _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-        _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-        _sortArgument[_sortArgumentCount - 1] = name;
-      }
-    }
-  }
-  
-  if (!find) {
-    if (Prefix[0] == 0) {
-      strcpy(newPrefix, component);
-    } else {
-      sprintf(newPrefix, "%s%s", prefix, component);
-    }
-    
-    expandWildcard(newPrefix, suffix);
-  }
-
-  closedir(d);
-  regfree(&re);
-  free(reg);
 }
 
 #if 0

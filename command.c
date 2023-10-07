@@ -15,6 +15,10 @@
 #include <stdlib.h>
 
 #include "shell.h"
+#include <unistd.h>     // Include for pipe, fork, close, dup2, and other system calls
+#include <sys/types.h>  // Include for types used in system calls
+#include <sys/wait.h>   // Include for waitpid
+#include <fcntl.h>      // Include for file operations
 
 /*
  *  Initialize a command_t

@@ -52,7 +52,7 @@ extern int yydebug;
 #include <string.h>
 #include <regex.h>
 #include <dirent.h>
-#include <algorithm>
+#include <algorithm.h>
 
 #if __cplusplus > 199711L
 #define register      // Deprecated in C++11 so remove the keyword

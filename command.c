@@ -121,17 +121,79 @@ void execute_command(command_t *command) {
     return;
   }
 
-  // Print contents of Command data structure
-  print_command(command);
+  // Iterate over the single commands and execute them
+  for (int i = 0; i < command->num_single_commands; i++) {
+    int pipe_fd[2]; // Pipe file descriptors for connecting processes
+    pid_t child_pid;
+    
+    // Create a pipe if there's a command after this one
+    if (i < command->num_single_commands - 1) {
+      if (pipe(pipe_fd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+      }
+    }
 
-  // Add execution here
-  // For every single command fork a new process
-  // Setup i/o redirection
-  // and call exec
+    // Fork a new process
+    child_pid = fork();
+    if (child_pid == -1) {
+      perror("fork");
+      exit(EXIT_FAILURE);
+    }
+    
+    if (child_pid == 0) { // Child process
+      // If there's a command after this one, redirect stdout to the write end of the pipe
+      if (i < command->num_single_commands - 1) {
+        close(pipe_fd[0]); // Close the read end of the pipe
+        dup2(pipe_fd[1], STDOUT_FILENO); // Redirect stdout to the write end of the pipe
+        close(pipe_fd[1]); // Close the original write end of the pipe
+      }
 
-  // Clear to prepare for next command
-  free_command(command);
+      // Set up input and output redirection for this single command
+      if (command->in_file) {
+        int in_fd = open(command->in_file, O_RDONLY);
+        if (in_fd == -1) {
+          perror("open");
+          exit(EXIT_FAILURE);
+        }
+        dup2(in_fd, STDIN_FILENO);
+        close(in_fd);
+      }
+
+      if (command->out_file) {
+        int out_flags = O_WRONLY | O_CREAT;
+        if (command->append_out) {
+          out_flags |= O_APPEND;
+        } else {
+          out_flags |= O_TRUNC;
+        }
+        int out_fd = open(command->out_file, out_flags, 0666);
+        if (out_fd == -1) {
+          perror("open");
+          exit(EXIT_FAILURE);
+        }
+        dup2(out_fd, STDOUT_FILENO);
+        close(out_fd);
+      }
+
+      // Execute the single command
+      execvp(command->single_commands[i]->argv[0], command->single_commands[i]->argv);
+      perror("execvp"); // If execvp fails, print an error
+      exit(EXIT_FAILURE);
+    } else { // Parent process
+      // Close the write end of the pipe if there's a command after this one
+      if (i < command->num_single_commands - 1) {
+        close(pipe_fd[1]);
+      }
+      
+      // If this command is not in the background, wait for it to finish
+      if (!command->background) {
+        int status;
+        waitpid(child_pid, &status, 0);
+      }
+    }
+  }
 
   // Print new prompt
   print_prompt();
-} /* execute_command() */
+}

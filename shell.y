@@ -14,7 +14,7 @@
 %code requires 
 {
 #include <sys/types.h>
-#include <string>
+#include <string.h>
 #include <string.h>
 #include <regex.h>
 #include <dirent.h>

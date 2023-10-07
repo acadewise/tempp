@@ -45,19 +45,21 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 14 "shell.y"
+#line 15 "shell.y"
 
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <string.h>
-  #include "command.h"
-  #include "single_command.h"
-  #include "shell.h"
+#include <sys/types.h>
+#include <string>
+#include <string.h>
+#include <regex.h>
+#include <dirent.h>
+#include <algorithm>
 
-  void yyerror(const char *s);
-  int yylex();
+#if __cplusplus > 199711L
+#define register      // Deprecated in C++11 so remove the keyword
+#endif
+#define MAXFILENAME 1024
 
-#line 61 "y.tab.h"
+#line 63 "y.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -69,10 +71,16 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     WORD = 258,                    /* WORD  */
-    PIPE = 259,                    /* PIPE  */
-    NOTOKEN = 260,                 /* NOTOKEN  */
+    NOTOKEN = 259,                 /* NOTOKEN  */
+    GREAT = 260,                   /* GREAT  */
     NEWLINE = 261,                 /* NEWLINE  */
-    STDOUT = 262                   /* STDOUT  */
+    LESS = 262,                    /* LESS  */
+    PIPE = 263,                    /* PIPE  */
+    AMPERSAND = 264,               /* AMPERSAND  */
+    GREATGREAT = 265,              /* GREATGREAT  */
+    GREATAND = 266,                /* GREATAND  */
+    TWOGREAT = 267,                /* TWOGREAT  */
+    GREATGREATAND = 268            /* GREATGREATAND  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -82,20 +90,28 @@ extern int yydebug;
 #define YYerror 256
 #define YYUNDEF 257
 #define WORD 258
-#define PIPE 259
-#define NOTOKEN 260
+#define NOTOKEN 259
+#define GREAT 260
 #define NEWLINE 261
-#define STDOUT 262
+#define LESS 262
+#define PIPE 263
+#define AMPERSAND 264
+#define GREATGREAT 265
+#define GREATAND 266
+#define TWOGREAT 267
+#define GREATGREATAND 268
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 27 "shell.y"
+#line 30 "shell.y"
 
-  char *string;
+  char        *string_val;
+  // Example of using a c++ type in yacc
+  std::string *cpp_string;
 
-#line 99 "y.tab.h"
+#line 115 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

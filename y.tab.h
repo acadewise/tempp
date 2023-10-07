@@ -45,11 +45,19 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 15 "shell.y"
+#line 14 "shell.y"
 
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include "command.h"
+  #include "single_command.h"
+  #include "shell.h"
 
+  void yyerror(const char *s);
+  int yylex();
 
-#line 53 "y.tab.h"
+#line 61 "y.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -83,11 +91,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "shell.y"
+#line 27 "shell.y"
 
-  char * string;
+  char *string;
 
-#line 91 "y.tab.h"
+#line 99 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

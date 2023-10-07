@@ -34,7 +34,7 @@
 
 %{
 #include <stdio.h>
-#include "shell.hh"
+#include "shell.h"
 
 void yyerror(const char * s);
 void expandWildcardsIfNecessary(char *arg);

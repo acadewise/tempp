@@ -218,7 +218,7 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 #line 35 "shell.y"
 
 #include <stdio.h>
-#include "shell.hh"
+#include "shell.h"
 
 void yyerror(const char * s);
 void expandWildcardsIfNecessary(char *arg);

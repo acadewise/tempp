@@ -1,3 +1,4 @@
+
 /*
  * Lab 3
  * shell.y: parser for shell
@@ -12,40 +13,37 @@
 
 %code requires 
 {
-#include <sys/types.h>
-#include <stdio.h>
+#include <string>
 #include <string.h>
-#include <regex.h>
-#include <dirent.h>
-#include <malloc.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
+
+#if __cplusplus > 199711L
+#define register      // Deprecated in C++11 so remove the keyword
+#endif
 }
 
 %union
 {
-  char *string_val;
+  char        *string_val;
+  // Example of using a c++ type in yacc
+  std::string *cpp_string;
 }
 
 %token <string_val> WORD
-%token NOTOKEN GREAT NEWLINE LESS PIPE AMPERSAND GREATGREAT GREATAND TWOGREAT GREATGREATAND
+%token NOTOKEN GREAT NEWLINE PIPE GREATGREAT AMPERSAND LESS GREATAMPERSAND GREATGREATAMPERSAND TWOGREAT
 
 %{
-#include <stdio.h>
-#include "shell.h"
+//#define yylex yylex
+#include <cstdio>
+#include "command.h"
 
 void yyerror(const char * s);
-void expandWildcardsIfNecessary(char *arg);
-void expandWildcard(char *prefix, char *suffix);
-bool cmpfunction (char *i, char *j);
-
 int yylex();
-static char **_sortArgument = NULL;
-static int _sortArgumentSize = 0;
-static int _sortArgumentCount = 0;
-static bool wildCard;
+
+void expandWildCardsIfNecessary(char * arg);
+void expandWildCards(char * prefix, char * arg);
+int cmpfunc(const void * file1, const void * file2);
+bool is_dir(const char * path);
+
 %}
 
 %%
@@ -59,23 +57,22 @@ commands:
   | commands command
   ;
 
-command: 
-  pipe_list iomodifier_list background_opt NEWLINE {
-    Shell::_currentCommand.execute();
+command: simple_command
+       ;
+
+simple_command:	
+   pipe_list iomodifier_list background_optional NEWLINE { 
+//printf("   Yacc: Execute command\n");
+    Command::_currentCommand.execute();
   }
-  | NEWLINE {
-    Shell::_currentCommand.execute();
-  }
+  | NEWLINE { Command::_currentCommand.prompt();}
   | error NEWLINE { yyerrok; }
   ;
 
-simple_command:	
-  command_and_args 
-  ;
-
 command_and_args:
-  command_word argument_list {    
-    Shell::_currentCommand.insertSimpleCommand(Command::_currentSimpleCommand);
+  command_word argument_list {
+    Command::_currentCommand.
+    insertSimpleCommand( Command::_currentSimpleCommand );
   }
   ;
 
@@ -86,331 +83,192 @@ argument_list:
 
 argument:
   WORD {
-    wildCard = false;
-    char *p = (char *)"";
-    expandWildcard(p, $1);
-    qsort(_sortArgument, _sortArgumentCount, sizeof(char *), cmpfunction);
-    for (int i = 0; i < _sortArgumentCount; i++) {
-      Command::_currentSimpleCommand->insertArgument(_sortArgument[i]);
-      free(_sortArgument[i]); // Free allocated memory
-    }
-    free(_sortArgument); // Free the array itself
-    _sortArgument = NULL;
-    _sortArgumentSize = 0;
-    _sortArgumentCount = 0;
+//printf("   Yacc: insert argument \"%s\"\n", $1);
+	  if(strcmp(Command::_currentSimpleCommand->_arguments[0], "echo") == 0 && strchr($1, '?'))
+      	Command::_currentSimpleCommand->insertArgument( $1 );
+	  else
+		expandWildCardsIfNecessary($1);
   }
   ;
 
 command_word:
   WORD {
+//printf("   Yacc: insert command \"%s\"\n", $1);
     Command::_currentSimpleCommand = new SimpleCommand();
-    Command::_currentSimpleCommand->insertArgument($1);
+    Command::_currentSimpleCommand->insertArgument( $1 );
   }
   ;
 
 pipe_list:
-  pipe_list PIPE simple_command 
-  | simple_command 
-  ;
+	pipe_list PIPE command_and_args
+	| command_and_args
+	;
 
 iomodifier_opt:
-  GREAT WORD {
-    Shell::_currentCommand.redirect(1, $2);
-  }
-  | GREATGREAT WORD {
-    Shell::_currentCommand.redirect(1, $2);
-    Shell::_currentCommand._append = true;
-  }
-  | GREATAND WORD {
-    Shell::_currentCommand.redirect(1, $2);
-    Shell::_currentCommand.redirect(2, $2);
-  }
-  | GREATGREATAND WORD {
-    Shell::_currentCommand.redirect(1, $2);
-    Shell::_currentCommand.redirect(2, $2);
-    Shell::_currentCommand._append = true;
-  }
-  | LESS WORD {
-    Shell::_currentCommand.redirect(0, $2);
-  }
-  | TWOGREAT WORD {
-    Shell::_currentCommand.redirect(2, $2);
-  }
-  ;
+  	GREAT WORD {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup($2);
+		Command::_currentCommand._outCounter++;
+  	}
+	| GREATGREAT WORD {
+//printf("   GREATGREAT WORD: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup($2);
+    	Command::_currentCommand._append = 1;
+		Command::_currentCommand._outCounter++;
+	}
+	| GREATAMPERSAND WORD {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup($2);
+    	Command::_currentCommand._errFile = strdup($2);
+		Command::_currentCommand._outCounter++;
+	}
+	| GREATGREATAMPERSAND WORD {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._outFile = strdup($2);
+    	Command::_currentCommand._errFile = strdup($2);
+    	Command::_currentCommand._append = 1;
+		Command::_currentCommand._outCounter++;
+	}
+	| LESS WORD {
+//printf("   Yacc: insert input \"%s\"\n", $2);
+    	Command::_currentCommand._inFile = strdup($2);
+		Command::_currentCommand._inCounter++;
+	}
+	| TWOGREAT WORD {
+//printf("   Yacc: insert output \"%s\"\n", $2);
+    	Command::_currentCommand._errFile = strdup($2);
+	}
+  	;
 
 iomodifier_list:
-  iomodifier_list iomodifier_opt
-  | /*empty*/
-  ;
+	iomodifier_list iomodifier_opt
+	| iomodifier_opt
+	| /* can be empty */
+	;
 
-background_opt:
-  AMPERSAND {
-    Shell::_currentCommand._background = true;
-  }
-  | /*empty*/
-  ;
+background_optional:
+	AMPERSAND {
+		Command::_currentCommand._background = 1;
+	}
+	| /* can be empty */
+	;
+	
 %%
 
-bool cmpfunction (const void *i, const void *j) {
-  return strcmp(*(const char **)i, *(const char **)j) < 0;
+int maxEntries = 20;
+int nEntries = 0;
+char ** entries;
+
+void expandWildCardsIfNecessary(char * arg) {
+
+	maxEntries = 20;
+	nEntries = 0;
+	entries = (char **) malloc (maxEntries * sizeof(char *));
+
+	if (strchr(arg, '*') || strchr(arg, '?')) {
+		expandWildCards(NULL, arg);
+		qsort(entries, nEntries, sizeof(char *), cmpfunc);
+		for (int i = 0; i < nEntries; i++) Command::_currentSimpleCommand->insertArgument(entries[i]);
+	}
+	else {
+		Command::_currentSimpleCommand->insertArgument(arg);
+	}
+	return;
+}
+
+
+int cmpfunc (const void *file1, const void *file2) {
+	const char *_file1 = *(const char **)file1;
+	const char *_file2 = *(const char **)file2;
+	return strcmp(_file1, _file2);
+}
+
+void expandWildCards(char * prefix, char * arg) {
+
+	char * temp = arg;
+	char * save = (char *) malloc (strlen(arg) + 10);
+	char * dir = save;
+
+	if (temp[0] == '/') *(save++) = *(temp++);
+
+	while (*temp != '/' && *temp) *(save++) = *(temp++);
+	*save = '\0';
+
+	if (strchr(dir, '*') || strchr(dir, '?')) {
+		if (!prefix && arg[0] == '/') {
+			prefix = strdup("/");
+			dir++;
+		}  
+
+		char * reg = (char *) malloc (2*strlen(arg) + 10);
+		char * a = dir;
+		char * r = reg;
+
+		*(r++) = '^';
+		while (*a) {
+			if (*a == '*') { *(r++) = '.'; *(r++) = '*'; }
+			else if (*a == '?') { *(r++) = '.'; }
+			else if (*a == '.') { *(r++) = '\\'; *(r++) = '.'; }
+			else { *(r++) = *a; }
+			a++;
+		}
+		*(r++) = '$'; *r = '\0';
+
+		regex_t re;
+
+		int expbuf = regcomp(&re, reg, REG_EXTENDED|REG_NOSUB);
+
+		char * toOpen = strdup((prefix)?prefix:".");
+		DIR * dir = opendir(toOpen);
+		if (dir == NULL) {
+			perror("opendir");
+			return;
+		}
+
+		struct dirent * ent;
+		regmatch_t match;
+
+		while ((ent = readdir(dir)) != NULL) {
+			if (!regexec(&re, ent->d_name, 1, &match, 0)) {
+				if (*temp) {
+					if (ent->d_type == DT_DIR) {
+						char * nPrefix = (char *) malloc (150);
+						if (!strcmp(toOpen, ".")) nPrefix = strdup(ent->d_name);
+						else if (!strcmp(toOpen, "/")) sprintf(nPrefix, "%s%s", toOpen, ent->d_name);
+						else sprintf(nPrefix, "%s/%s", toOpen, ent->d_name);
+						expandWildCards(nPrefix, (*temp == '/')?++temp:temp);
+					}
+				} else {
+					
+					if (nEntries == maxEntries) { maxEntries *= 2; entries = (char **) realloc (entries, maxEntries * sizeof(char *)); }
+					char * argument = (char *) malloc (100);
+					argument[0] = '\0';
+					if (prefix) sprintf(argument, "%s/%s", prefix, ent->d_name);
+
+					if (ent->d_name[0] == '.') {
+						if (arg[0] == '.') {
+							entries[nEntries++] = (argument[0] != '\0')?strdup(argument):strdup(ent->d_name);
+						}
+					} else {
+						entries[nEntries++] = (argument[0] != '\0')?strdup(argument):strdup(ent->d_name);
+					}
+				}
+			}
+		}
+		closedir(dir);
+	} else {
+		char * preToSend = (char *) malloc (100);
+		if (prefix) sprintf(preToSend, "%s/%s", prefix, dir);
+		else preToSend = strdup(dir);
+
+		if (*temp) expandWildCards(preToSend, ++temp);
+	}
 }
 
 void
 yyerror(const char * s)
 {
   fprintf(stderr,"%s", s);
-}
-
-void expandWildcardsIfNecessary(char *arg) {
-  char *a = arg;
-  char *p;
-  char *path;
-  
-  if (strchr(arg, '?') == NULL && strchr(arg, '*') == NULL) {
-    Command::_currentSimpleCommand->insertArgument(arg);
-    return;
-  }
-
-  DIR *dir;
-  
-  if (arg[0] == '/') {
-    size_t found = 0;
-    found = strcspn(arg, "/");
-    
-    while (strchr(arg + found + 1, '/') != NULL) {
-      found = strcspn(arg + found + 1, "/") + found + 1;
-    }
-    
-    path = strndup(arg, found + 1);
-    a = arg + found + 1;
-    dir = opendir(path);
-  } else {
-    dir = opendir(".");
-    path = (char *)"";
-  }
-  
-  if (dir == NULL) {
-    perror("opendir");
-    return;
-  }
-
-  size_t regSize = 2 * strlen(a) + 10;
-  char *reg = (char *)malloc(regSize);
-  char *r = reg;
-  *r = '^';
-  r++;
-
-  while (*a) {
-    if (*a == '*') {
-      *r = '.';
-      r++;
-      *r = '*';
-      r++;
-    } else if (*a == '?') {
-      *r = '.';
-      r++;
-    } else if (*a == '.') {
-      *r = '\\';
-      r++;
-      *r = '.';
-      r++;
-    } else {
-      *r = *a;
-      r++;
-    }
-    a++;
-  }
-
-  *r = '$';
-  r++;
-  *r = 0;
-
-  regex_t re;
-  int expbuf = regcomp(&re, reg, REG_EXTENDED | REG_NOSUB);
-
-  if (expbuf != 0) {
-    perror("regcomp");
-    return;
-  }
-
-  struct dirent *ent;
-
-  while ((ent = readdir(dir)) != NULL) {
-    if (regexec(&re, ent->d_name, 1, NULL, 0) == 0) {
-      if (reg[1] == '.') {
-        if (ent->d_name[0] != '.') {
-          char *name = (char *)malloc(strlen(path) + strlen(ent->d_name) + 1);
-          strcpy(name, path);
-          strcat(name, ent->d_name);
-          _sortArgumentCount++;
-          _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-          _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-          _sortArgument[_sortArgumentCount - 1] = name;
-        }
-      } else {
-        char *name = (char *)malloc(strlen(path) + strlen(ent->d_name) + 1);
-        strcpy(name, path);
-        strcat(name, ent->d_name);
-        _sortArgumentCount++;
-        _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-        _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-        _sortArgument[_sortArgumentCount - 1] = name;
-      }
-    }
-  }
-
-  closedir(dir);
-  regfree(&re);
-
-  qsort(_sortArgument, _sortArgumentCount, sizeof(char *), cmpfunction);
-  
-  for (int i = 0; i < _sortArgumentCount; i++) {
-    Command::_currentSimpleCommand->insertArgument(_sortArgument[i]);
-    free(_sortArgument[i]); // Free allocated memory
-  }
-  
-  free(_sortArgument); // Free the array itself
-  _sortArgument = NULL;
-  _sortArgumentSize = 0;
-  _sortArgumentCount = 0;
-}
-
-void expandWildcard(char *prefix, char *suffix) {
-  if (suffix[0] == 0) {
-    _sortArgumentCount++;
-    _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-    _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-    _sortArgument[_sortArgumentCount - 1] = strdup(prefix);
-    return;
-  }
-
-  char Prefix[MAXFILENAME];
-
-  if (prefix[0] == 0) {
-    if (suffix[0] == '/') {
-      suffix += 1;
-      sprintf(Prefix, "%s/", prefix);
-    } else {
-      strcpy(Prefix, prefix);
-    }
-  } else {
-    sprintf(Prefix, "%s/", prefix);
-  }
-
-  char *s = strchr(suffix, '/');
-  char component[MAXFILENAME];
-
-  if (s != NULL) {
-    strncpy(component, suffix, s - suffix);
-    component[s - suffix] = 0;
-    suffix = s + 1;
-  } else {
-    strcpy(component, suffix);
-    suffix = suffix + strlen(suffix);
-  }
-
-  char newPrefix[MAXFILENAME];
-
-  if (strchr(component, '?') == NULL && strchr(component, '*') == NULL) {
-    if (Prefix[0] == 0) {
-      strcpy(newPrefix, component);
-    } else {
-      sprintf(newPrefix, "%s%s", prefix, component);
-    }
-    
-    expandWildcard(newPrefix, suffix);
-    return;
-  }
-
-  size_t regSize = 2 * strlen(component) + 10;
-  char *reg = (char *)malloc(regSize);
-  char *r = reg;
-  *r = '^';
-  r++;
-
-  int i = 0;
-
-  while (component[i]) {
-    if (component[i] == '*') {
-      *r = '.';
-      r++;
-      *r = '*';
-      r++;
-    } else if (component[i] == '?') {
-      *r = '.';
-      r++;
-    } else if (component[i] == '.') {
-      *r = '\\';
-      r++;
-      *r = '.';
-      r++;
-    } else {
-      *r = component[i];
-      r++;
-    }
-    i++;
-  }
-
-  *r = '$';
-  r++;
-  *r = 0;
-
-  regex_t re;
-  int expbuf = regcomp(&re, reg, REG_EXTENDED | REG_NOSUB);
-
-  char *dir;
-
-  if (Prefix[0] == 0) {
-    dir = (char *)".";
-  } else {
-    dir = Prefix;
-  }
-  
-  DIR *d = opendir(dir);
-
-  if (d == NULL) {
-    return;
-  }
-
-  struct dirent *ent;
-  bool find = false;
-
-  while ((ent = readdir(d)) != NULL) {
-    if (regexec(&re, ent->d_name, 1, NULL, 0) == 0) {
-      find = true;
-      char *name = (char *)malloc(strlen(Prefix) + strlen(ent->d_name) + 1);
-      strcpy(name, Prefix);
-      strcat(name, ent->d_name);
-      
-      if (reg[1] == '.') {
-        if (ent->d_name[0] != '.') {
-          _sortArgumentCount++;
-          _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-          _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-          _sortArgument[_sortArgumentCount - 1] = name;
-        }
-      } else {
-        _sortArgumentCount++;
-        _sortArgumentSize = _sortArgumentSize + sizeof(char *);
-        _sortArgument = (char **)realloc(_sortArgument, _sortArgumentSize);
-        _sortArgument[_sortArgumentCount - 1] = name;
-      }
-    }
-  }
-  
-  if (!find) {
-    if (Prefix[0] == 0) {
-      strcpy(newPrefix, component);
-    } else {
-      sprintf(newPrefix, "%s%s", prefix, component);
-    }
-    
-    expandWildcard(newPrefix, suffix);
-  }
-
-  closedir(d);
-  regfree(&re);
-  free(reg);
 }
 
 #if 0

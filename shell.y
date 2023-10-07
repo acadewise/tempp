@@ -13,7 +13,9 @@
 
 %code requires 
 {
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 }
 
 %union
@@ -25,7 +27,6 @@
 %token NOTOKEN NEWLINE STDOUT
 
 %{
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <malloc.h>

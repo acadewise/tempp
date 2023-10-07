@@ -215,7 +215,7 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 #line 33 "shell.y"
 
 //#define yylex yylex
-#include <cstdio.h>
+#include <stdio.h>
 #include "command.h"
 
 void yyerror(const char * s);

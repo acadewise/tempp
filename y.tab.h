@@ -48,7 +48,7 @@ extern int yydebug;
 #line 15 "shell.y"
 
 #include <sys/types.h>
-#include <string>
+#include <string.h>
 #include <string.h>
 #include <regex.h>
 #include <dirent.h>

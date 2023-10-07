@@ -32,7 +32,7 @@
 
 %{
 //#define yylex yylex
-#include <cstdio>
+#include <cstdio.h>
 #include "command.h"
 
 void yyerror(const char * s);

@@ -102,14 +102,13 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 15 "shell.y"
 
-#include <string>
 #include <string.h>
 
 #if __cplusplus > 199711L
 #define register      // Deprecated in C++11 so remove the keyword
 #endif
 
-#line 113 "y.tab.c"
+#line 112 "y.tab.c"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -155,13 +154,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "shell.y"
+#line 24 "shell.y"
 
   char        *string_val;
   // Example of using a c++ type in yacc
   std::string *cpp_string;
 
-#line 165 "y.tab.c"
+#line 164 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -213,7 +212,7 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 /* Second part of user prologue.  */
-#line 34 "shell.y"
+#line 33 "shell.y"
 
 //#define yylex yylex
 #include <cstdio>
@@ -228,7 +227,7 @@ int cmpfunc(const void * file1, const void * file2);
 bool is_dir(const char * path);
 
 
-#line 232 "y.tab.c"
+#line 231 "y.tab.c"
 
 
 #ifdef short
@@ -611,9 +610,9 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    52,    52,    56,    57,    60,    64,    68,    69,    73,
-      80,    81,    85,    95,   103,   104,   108,   113,   119,   125,
-     132,   137,   144,   145,   146,   150,   153
+       0,    51,    51,    55,    56,    59,    63,    67,    68,    72,
+      79,    80,    84,    94,   102,   103,   107,   112,   118,   124,
+     131,   136,   143,   144,   145,   149,   152
 };
 #endif
 
@@ -1195,37 +1194,37 @@ yyreduce:
   switch (yyn)
     {
   case 6: /* simple_command: pipe_list iomodifier_list background_optional NEWLINE  */
-#line 64 "shell.y"
+#line 63 "shell.y"
                                                          { 
 //printf("   Yacc: Execute command\n");
     Command::_currentCommand.execute();
   }
-#line 1204 "y.tab.c"
+#line 1203 "y.tab.c"
     break;
 
   case 7: /* simple_command: NEWLINE  */
-#line 68 "shell.y"
+#line 67 "shell.y"
             { Command::_currentCommand.prompt();}
-#line 1210 "y.tab.c"
+#line 1209 "y.tab.c"
     break;
 
   case 8: /* simple_command: error NEWLINE  */
-#line 69 "shell.y"
+#line 68 "shell.y"
                   { yyerrok; }
-#line 1216 "y.tab.c"
+#line 1215 "y.tab.c"
     break;
 
   case 9: /* command_and_args: command_word argument_list  */
-#line 73 "shell.y"
+#line 72 "shell.y"
                              {
     Command::_currentCommand.
     insertSimpleCommand( Command::_currentSimpleCommand );
   }
-#line 1225 "y.tab.c"
+#line 1224 "y.tab.c"
     break;
 
   case 12: /* argument: WORD  */
-#line 85 "shell.y"
+#line 84 "shell.y"
        {
 //printf("   Yacc: insert argument \"%s\"\n", $1);
 	  if(strcmp(Command::_currentSimpleCommand->_arguments[0], "echo") == 0 && strchr((yyvsp[0].string_val), '?'))
@@ -1233,53 +1232,53 @@ yyreduce:
 	  else
 		expandWildCardsIfNecessary((yyvsp[0].string_val));
   }
-#line 1237 "y.tab.c"
+#line 1236 "y.tab.c"
     break;
 
   case 13: /* command_word: WORD  */
-#line 95 "shell.y"
+#line 94 "shell.y"
        {
 //printf("   Yacc: insert command \"%s\"\n", $1);
     Command::_currentSimpleCommand = new SimpleCommand();
     Command::_currentSimpleCommand->insertArgument( (yyvsp[0].string_val) );
   }
-#line 1247 "y.tab.c"
+#line 1246 "y.tab.c"
     break;
 
   case 16: /* iomodifier_opt: GREAT WORD  */
-#line 108 "shell.y"
+#line 107 "shell.y"
                    {
 //printf("   Yacc: insert output \"%s\"\n", $2);
     	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
 		Command::_currentCommand._outCounter++;
   	}
-#line 1257 "y.tab.c"
+#line 1256 "y.tab.c"
     break;
 
   case 17: /* iomodifier_opt: GREATGREAT WORD  */
-#line 113 "shell.y"
+#line 112 "shell.y"
                           {
 //printf("   GREATGREAT WORD: insert output \"%s\"\n", $2);
     	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
     	Command::_currentCommand._append = 1;
 		Command::_currentCommand._outCounter++;
 	}
-#line 1268 "y.tab.c"
+#line 1267 "y.tab.c"
     break;
 
   case 18: /* iomodifier_opt: GREATAMPERSAND WORD  */
-#line 119 "shell.y"
+#line 118 "shell.y"
                               {
 //printf("   Yacc: insert output \"%s\"\n", $2);
     	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
     	Command::_currentCommand._errFile = strdup((yyvsp[0].string_val));
 		Command::_currentCommand._outCounter++;
 	}
-#line 1279 "y.tab.c"
+#line 1278 "y.tab.c"
     break;
 
   case 19: /* iomodifier_opt: GREATGREATAMPERSAND WORD  */
-#line 125 "shell.y"
+#line 124 "shell.y"
                                    {
 //printf("   Yacc: insert output \"%s\"\n", $2);
     	Command::_currentCommand._outFile = strdup((yyvsp[0].string_val));
@@ -1287,38 +1286,38 @@ yyreduce:
     	Command::_currentCommand._append = 1;
 		Command::_currentCommand._outCounter++;
 	}
-#line 1291 "y.tab.c"
+#line 1290 "y.tab.c"
     break;
 
   case 20: /* iomodifier_opt: LESS WORD  */
-#line 132 "shell.y"
+#line 131 "shell.y"
                     {
 //printf("   Yacc: insert input \"%s\"\n", $2);
     	Command::_currentCommand._inFile = strdup((yyvsp[0].string_val));
 		Command::_currentCommand._inCounter++;
 	}
-#line 1301 "y.tab.c"
+#line 1300 "y.tab.c"
     break;
 
   case 21: /* iomodifier_opt: TWOGREAT WORD  */
-#line 137 "shell.y"
+#line 136 "shell.y"
                         {
 //printf("   Yacc: insert output \"%s\"\n", $2);
     	Command::_currentCommand._errFile = strdup((yyvsp[0].string_val));
 	}
-#line 1310 "y.tab.c"
+#line 1309 "y.tab.c"
     break;
 
   case 25: /* background_optional: AMPERSAND  */
-#line 150 "shell.y"
+#line 149 "shell.y"
                   {
 		Command::_currentCommand._background = 1;
 	}
-#line 1318 "y.tab.c"
+#line 1317 "y.tab.c"
     break;
 
 
-#line 1322 "y.tab.c"
+#line 1321 "y.tab.c"
 
       default: break;
     }
@@ -1511,7 +1510,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 156 "shell.y"
+#line 155 "shell.y"
 
 
 int maxEntries = 20;

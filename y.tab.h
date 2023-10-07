@@ -47,13 +47,9 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 15 "shell.y"
 
-#include <string.h>
 
-#if __cplusplus > 199711L
-#define register      // Deprecated in C++11 so remove the keyword
-#endif
 
-#line 57 "y.tab.h"
+#line 53 "y.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -65,16 +61,10 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     WORD = 258,                    /* WORD  */
-    NOTOKEN = 259,                 /* NOTOKEN  */
-    GREAT = 260,                   /* GREAT  */
+    PIPE = 259,                    /* PIPE  */
+    NOTOKEN = 260,                 /* NOTOKEN  */
     NEWLINE = 261,                 /* NEWLINE  */
-    PIPE = 262,                    /* PIPE  */
-    GREATGREAT = 263,              /* GREATGREAT  */
-    AMPERSAND = 264,               /* AMPERSAND  */
-    LESS = 265,                    /* LESS  */
-    GREATAMPERSAND = 266,          /* GREATAMPERSAND  */
-    GREATGREATAMPERSAND = 267,     /* GREATGREATAMPERSAND  */
-    TWOGREAT = 268                 /* TWOGREAT  */
+    STDOUT = 262                   /* STDOUT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -84,28 +74,20 @@ extern int yydebug;
 #define YYerror 256
 #define YYUNDEF 257
 #define WORD 258
-#define NOTOKEN 259
-#define GREAT 260
+#define PIPE 259
+#define NOTOKEN 260
 #define NEWLINE 261
-#define PIPE 262
-#define GREATGREAT 263
-#define AMPERSAND 264
-#define LESS 265
-#define GREATAMPERSAND 266
-#define GREATGREATAMPERSAND 267
-#define TWOGREAT 268
+#define STDOUT 262
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 24 "shell.y"
+#line 20 "shell.y"
 
-  char        *string_val;
-  // Example of using a c++ type in yacc
-  std::string *cpp_string;
+  char * string;
 
-#line 109 "y.tab.h"
+#line 91 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

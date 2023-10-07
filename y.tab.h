@@ -47,9 +47,11 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 15 "shell.y"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-#line 53 "y.tab.h"
+#line 55 "y.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -83,11 +85,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "shell.y"
+#line 22 "shell.y"
 
   char * string;
 
-#line 91 "y.tab.h"
+#line 93 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

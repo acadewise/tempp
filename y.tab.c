@@ -102,9 +102,11 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 15 "shell.y"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-#line 108 "y.tab.c"
+#line 110 "y.tab.c"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -138,11 +140,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "shell.y"
+#line 22 "shell.y"
 
   char * string;
 
-#line 146 "y.tab.c"
+#line 148 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -186,8 +188,7 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 /* Second part of user prologue.  */
-#line 27 "shell.y"
-
+#line 29 "shell.y"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -201,7 +202,7 @@ void yyerror(const char * s);
 int yylex();
 
 
-#line 205 "y.tab.c"
+#line 206 "y.tab.c"
 
 
 #ifdef short
@@ -584,8 +585,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    45,    45,    49,    50,    54,    57,    61,    62,    66,
-      73,    74,    78,    82,    89,    90,    94
+       0,    46,    46,    50,    51,    55,    58,    62,    63,    67,
+      74,    75,    79,    83,    90,    91,    95
 };
 #endif
 
@@ -1157,39 +1158,39 @@ yyreduce:
   switch (yyn)
     {
   case 5: /* entire_command: single_command_list io_modifier_list NEWLINE  */
-#line 54 "shell.y"
+#line 55 "shell.y"
                                                   {
       print_command(g_current_command);
      }
-#line 1165 "y.tab.c"
+#line 1166 "y.tab.c"
     break;
 
   case 9: /* single_command: executable argument_list  */
-#line 66 "shell.y"
+#line 67 "shell.y"
                              { 
       /* print_single_command(g_current_single_command); */
       insert_single_command(g_current_command, g_current_single_command);
     }
-#line 1174 "y.tab.c"
+#line 1175 "y.tab.c"
     break;
 
   case 12: /* argument: WORD  */
-#line 78 "shell.y"
+#line 79 "shell.y"
           { insert_argument(g_current_single_command, strdup(yylval.string)); }
-#line 1180 "y.tab.c"
+#line 1181 "y.tab.c"
     break;
 
   case 13: /* executable: WORD  */
-#line 82 "shell.y"
+#line 83 "shell.y"
           {
       insert_argument(g_current_single_command, strdup(yylval.string));
       g_current_single_command->executable = strdup(yylval.string);
       /* printf("Here is an executable: %s\n", $1); */ }
-#line 1189 "y.tab.c"
+#line 1190 "y.tab.c"
     break;
 
 
-#line 1193 "y.tab.c"
+#line 1194 "y.tab.c"
 
       default: break;
     }
@@ -1382,7 +1383,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 98 "shell.y"
+#line 99 "shell.y"
 
 
 void

@@ -181,7 +181,7 @@ void execute_command(command_t *command) {
       }
 
       // Execute the single command
-      execvp(command->single_commands[i]->argv[0], command->single_commands[i]->argv);
+      execvp(command->single_commands[i]->arguments[0], command->single_commands[i]->arguments);
       perror("execvp"); // If execvp fails, print an error
       exit(EXIT_FAILURE);
     } else { // Parent process
